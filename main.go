@@ -32,11 +32,6 @@ func main() {
 		}
 	}
 
-	err := godotenv.Load(".env")
-	if err != nil {
-		log.Fatal("Error loading file .env", err)
-	}
-
 	MONGODB_URL := os.Getenv("MONGODB_URL")
 	clientOptions := options.Client().ApplyURI(MONGODB_URL)
 	client, err := mongo.Connect(context.Background(), clientOptions)
@@ -68,14 +63,15 @@ func main() {
 	app.Patch("/api/todos/:id", updateTodo)
 	app.Delete("/api/todos/:id", deleteTodo)
 
-	if os.Getenv("ENV") == "production" {
-		app.Static("/", "./client/dist")
-	}
-
 	port := os.Getenv("PORT")
 	if port == "" {
 		port = "5000"
 	}
+
+	if os.Getenv("ENV") == "production" {
+		app.Static("/", "./client/dist")
+	}
+
 	log.Fatal(app.Listen("0.0.0.0:" + port))
 }
 
