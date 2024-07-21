@@ -15,7 +15,7 @@ import (
 )
 
 type Todo struct {
-	ID        primitive.ObjectID `json:"id,omitempty" bson:"_id,omitempty"`
+	ID        primitive.ObjectID `json:"_id,omitempty" bson:"_id,omitempty"`
 	Completed bool               `json:"completed"`
 	Body      string             `json:"body"`
 }
@@ -24,6 +24,13 @@ var collection *mongo.Collection
 
 func main() {
 	fmt.Println("Hello, World!")
+	//load the env file if not in production
+	if os.Getenv("ENV") != "production" {
+		err := godotenv.Load(".env")
+		if err != nil {
+			log.Fatal("Error loading .env file: ", err)
+		}
+	}
 
 	err := godotenv.Load(".env")
 	if err != nil {
@@ -51,10 +58,19 @@ func main() {
 
 	app := fiber.New()
 
+	// app.Use(cors.New(cors.Config{
+	// 	AllowOrigins: "http://localhost:5173",
+	// 	AllowHeaders: "Origin, content-type, Accept",
+	// }))
+
 	app.Get("/api/todos", getTodos)
 	app.Post("/api/todos", createTodo)
 	app.Patch("/api/todos/:id", updateTodo)
 	app.Delete("/api/todos/:id", deleteTodo)
+
+	if os.Getenv("ENV") == "production" {
+		app.Static("/", "./client/dist")
+	}
 
 	port := os.Getenv("PORT")
 	if port == "" {
